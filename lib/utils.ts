@@ -19,6 +19,7 @@ export function pageStr(req: Request): string {
     : String(req.pages_received);
 }
 
+// Takes effectiveStatus (not req.status) so in-session edits update the Due In display immediately.
 export function getDueDays(
   req: Request,
   effectiveStatus: string,
@@ -26,10 +27,11 @@ export function getDueDays(
   if (!req.due_at)
     return { label: "-", cls: "text-center text-muted-foreground/40" };
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0); // normalize to midnight for accurate day diff
   const [y, m, d] = req.due_at.split("-").map(Number);
   const due = new Date(y, m - 1, d);
   const days = Math.round((due.getTime() - today.getTime()) / 86400000);
+  // Terminal statuses suppress overdue styling — the due date is no longer actionable.
   const isTerminal = ["received", "canceled", "draft"].includes(effectiveStatus);
   if (days === 0) {
     return {

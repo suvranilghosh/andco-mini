@@ -6,6 +6,6 @@ async function sleep(ms: number) {
 }
 
 export default async function Home() {
-  await sleep(500);
+  await sleep(500); // demo only
   return <CaseRequests caseData={caseData} />;
 }

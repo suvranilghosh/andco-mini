@@ -47,20 +47,20 @@ const TABLE_COLS = [
   "Requested",
   "Due In",
   "Pages",
-  "Action / Reason",
+  "Action Required / Reason",
   "Notes",
 ];
 
 const COL_WIDTHS: Record<string, string> = {
   "": "w-8 pl-3",
   Document: "w-[200px]",
-  Source: "w-36",
+  Source: "w-56",
   Status: "w-[108px]",
   Assignee: "w-[108px]",
   Requested: "w-[90px]",
   "Due In": "w-[90px]",
-  Pages: "w-[60px]",
-  "Action / Reason": "w-[200px]",
+  Pages: "w-[65px]",
+  "Action Required / Reason": "w-[200px]",
   Notes: "pl-3 pr-4",
 };
 
@@ -71,6 +71,8 @@ export function CaseRequests({ caseData }: { caseData: CaseData }) {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterAssignee, setFilterAssignee] = useState("all");
   const { case: caseInfo, requests } = caseData;
+  // Local copy of statuses so edits are reflected immediately in Due In and filters
+  // without a server roundtrip.
   const [statuses, setStatuses] = useState<Record<string, string>>(() =>
     Object.fromEntries(requests.map((r) => [r.id, r.status])),
   );
@@ -83,6 +85,8 @@ export function CaseRequests({ caseData }: { caseData: CaseData }) {
 
   function sortReqs(reqs: readonly Request[]): Request[] {
     return [...reqs].sort((a, b) => {
+      // ISO date strings sort lexicographically, so null dates are pushed to the end
+      // regardless of sort direction using sentinel values.
       const sentinel = sortDir === "asc" ? "9999-12-31" : "0000-01-01";
       const aVal = a[sortKey] ?? sentinel;
       const bVal = b[sortKey] ?? sentinel;
@@ -122,7 +126,7 @@ export function CaseRequests({ caseData }: { caseData: CaseData }) {
     <>
       {/* ── Header ── */}
       <header className="sticky top-0 z-10 border-b border-header/20 bg-header text-header-foreground">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3">
+        <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-5 py-3">
           <div className="flex items-center gap-3 min-w-0">
             <div className="min-w-0">
               <div className="truncate text-sm font-semibold">
@@ -145,7 +149,7 @@ export function CaseRequests({ caseData }: { caseData: CaseData }) {
       </header>
 
       {/* ── Main ── */}
-      <main className="mx-auto max-w-7xl space-y-5 px-5 py-5">
+      <main className="mx-auto max-w-[1400px] space-y-5 px-5 py-5">
         {/* Reports header with filters */}
         <FilterBar
           filterStatus={filterStatus}
@@ -171,6 +175,7 @@ export function CaseRequests({ caseData }: { caseData: CaseData }) {
               <Card className="py-0">
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
+                    {/* table-fixed locks column widths to the header, preventing layout shift when filtered rows change content width */}
                     <Table className="table-fixed">
                       <TableHeader>
                         <TableRow className="bg-muted/60 hover:bg-muted/60">
@@ -327,7 +332,7 @@ export function CaseRequests({ caseData }: { caseData: CaseData }) {
                                   {pages}
                                 </TableCell>
                                 <TableCell className="text-muted-foreground">
-                                  {(req.action_required ?? req.reason) && (
+                                  {(req.action_required ?? req.reason) ? (
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <div className="truncate">
@@ -338,6 +343,10 @@ export function CaseRequests({ caseData }: { caseData: CaseData }) {
                                         {req.action_required ?? req.reason}
                                       </TooltipContent>
                                     </Tooltip>
+                                  ) : (
+                                    <span className="text-muted-foreground/40">
+                                      -
+                                    </span>
                                   )}
                                 </TableCell>
                                 <TableCell className="pr-4">
@@ -355,7 +364,7 @@ export function CaseRequests({ caseData }: { caseData: CaseData }) {
                                           e.currentTarget.blur();
                                       }}
                                       placeholder="Add note…"
-                                      className="h-7 rounded-sm border-transparent bg-transparent! px-2 text-xs shadow-none hover:border-input focus-visible:border-input focus-visible:ring-0"
+                                      className="h-7 rounded-sm border-transparent bg-transparent! px-2 text-xs shadow-none placeholder:opacity-50 hover:border-input focus-visible:border-input focus-visible:ring-0"
                                     />
                                   </div>
                                 </TableCell>
