@@ -25,6 +25,7 @@ import {
   CaretDownIcon,
   CaretUpDownIcon,
   CaretUpIcon,
+  FolderOpenIcon,
   WarningIcon,
 } from "@phosphor-icons/react";
 import { fmt, getDueDays, pageStr } from "@/lib/utils";
@@ -150,17 +151,23 @@ export function CaseRequests({ caseData }: { caseData: CaseData }) {
 
       {/* ── Main ── */}
       <main className="mx-auto max-w-[1400px] space-y-5 px-5 py-5">
-        {/* Reports header with filters */}
-        <FilterBar
-          filterStatus={filterStatus}
-          filterAssignee={filterAssignee}
-          statuses={allStatuses}
-          assignees={allAssignees}
-          onFilterStatusChange={setFilterStatus}
-          onFilterAssigneeChange={setFilterAssignee}
-        />
-
-        {groups.map(({ cat, reqs }) => {
+        {requests.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center text-muted-foreground">
+            <FolderOpenIcon size={32} className="mb-3 opacity-30" />
+            <p className="text-sm font-medium">No document requests</p>
+            <p className="mt-1 text-xs opacity-60">This case has no requests yet.</p>
+          </div>
+        ) : (
+          <>
+            <FilterBar
+              filterStatus={filterStatus}
+              filterAssignee={filterAssignee}
+              statuses={allStatuses}
+              assignees={allAssignees}
+              onFilterStatusChange={setFilterStatus}
+              onFilterAssigneeChange={setFilterAssignee}
+            />
+            {groups.map(({ cat, reqs }) => {
           const sortedReqs = sortReqs(reqs);
           return (
             <section key={cat}>
@@ -380,6 +387,8 @@ export function CaseRequests({ caseData }: { caseData: CaseData }) {
             </section>
           );
         })}
+          </>
+        )}
       </main>
 
       {/* ── Detail Drawer ── */}
